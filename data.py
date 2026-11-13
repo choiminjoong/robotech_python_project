@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
+import matplotlib
 import matplotlib.pyplot as plt
+import matplotlib.font_manager as fm
 
 
 # 의료 기초 데이터 분석 미니 프로젝트
@@ -263,4 +265,132 @@ df['위험점수'] = (
 
 print(f'\n[위험점수]: \n{df[["환자ID", "위험점수"]]}')
 
+# 혈압분포 히스토그램
 
+# 원하는 폰트 파일 경로 문자열로 입력
+font_path = r'/usr/share/fonts/truetype/nanum/NanumGothic.ttf'
+# 지정한 폰트 파일 경로에서 폰트 추출
+font_name = fm.FontProperties(
+    fname=font_path
+).get_name()
+
+# matplotlib의 전역 폰트 설정 변경
+matplotlib.rc('font', family=font_name)
+
+plt.figure() # 그래프 공간 생성
+plt.hist(df['SBP(수축기)'], bins=8) # 구간 설정
+plt.title('SBP DIST') # 그래프 위 제목(수축기 혈압(SBP) 분포)
+plt.xlabel('SBP(mmHg)') # 가로축 의미 설명
+plt.ylabel('빈도') # 세로축 의미 설명(빈도)
+plt.tight_layout() # 글자가 잘리지 않게 자동 정렬
+#plt.show()
+
+plt.figure()
+plt.hist(df['DBP(이완기)'], bins=8) # 구간 설정
+plt.title('DBP DIST') # 그래프 위 제목(이완기 혈압(DBP) 분포)
+plt.xlabel('DBP(mmHg)')
+plt.ylabel('frequency')
+plt.tight_layout()
+#plt.show()
+
+
+# 혈압분류별 평균 SBP 막대그래프
+bp_sbp_mean = df.groupby('혈압분류')['SBP(수축기)'].mean().sort_values(ascending=False)
+
+plt.close('all')
+plt.figure()
+plt.bar(bp_sbp_mean.index, bp_sbp_mean.values)
+plt.title('Avg SBP by Blood Category')
+plt.xlabel('Blood Pressure Category')
+plt.ylabel('Average SBP(mmHg)')
+plt.tight_layout()
+# plt.show()
+
+
+# 산점도 : BMI vs SBP
+plt.close('all')
+plt.figure()
+plt.scatter(df['BMI'], df['SBP(수축기)'])
+plt.title('BMI vs SBP Scatter plot')
+plt.xlabel('BMI')
+plt.ylabel('SBP(mmHg)')
+plt.tight_layout()
+# plt.show()
+
+
+# 측정일 기준 SBP 추이(날짜별 평균)
+date_sbp = df.groupby('측정일')['SBP(수축기)'].mean()
+
+plt.close('all')
+plt.figure()
+plt.plot(date_sbp.index, date_sbp.values) # 선 그래프 생성
+plt.title('Avg SBP Over Time') # 측정일별 평균 SBP 추이
+plt.xlabel('Measurement Date')
+plt.ylabel('Avg SBP(mmHg)')
+plt.xticks(rotation=30) # x축 눈금 글자 30도 회전
+plt.tight_layout()
+# plt.show()
+
+
+# BMI분류 인원 수(파이차트)
+bmi_count = df['BMI분류'].value_counts()
+
+plt.close('all')
+plt.figure()
+plt.pie(
+    bmi_count.values,
+    labels=bmi_count.index,
+    autopct='%1.1f%%'
+)
+plt.title('BMI Category DIST')
+plt.tight_layout()
+# plt.show()
+
+
+#혈압분류별 BMI 분포(박스플롯)
+plt.close('all')
+plt.figure()
+df.boxplot(column='BMI', by='혈압분류')
+plt.title('BMI DIST by Blood Category')
+plt.suptitle('') # 자동으로 생성되는 상단 제목 제거
+plt.xlabel('Blood Pressure Category')
+plt.ylabel('BMI')
+plt.tight_layout()
+# plt.show()
+
+
+#성별 BMI
+plt.close('all')
+
+plt.figure()
+df[df['성별'] == 'M']['BMI'].hist(alpha=0.5, bins=8)
+df[df['성별'] == 'F']['BMI'].hist(alpha=0.5, bins=8)
+plt.title('BMI DIST by Gender')
+plt.xlabel('BMI')
+plt.ylabel('Frequency')
+plt.legend(['Male', 'Female']) # 범례 표시
+plt.tight_layout()
+# plt.show()
+
+
+#상관관계 히트맵
+corr_cols = [
+    '나이',
+    '키_cm',
+    '몸무게_kg',
+    'SBP(수축기)',
+    'DBP(이완기)',
+    '공복혈당',
+    'BMI'
+]
+corr = df[corr_cols].corr()
+
+plt.close('all')
+plt.figure()
+plt.imshow(corr)
+plt.colorbar()
+plt.xticks(range(len(corr_cols)), corr_cols, rotation=45)
+plt.yticks(range(len(corr_cols)), corr_cols, rotation=45)
+plt.title('Correlation Heatmap')
+plt.tight_layout()
+plt.show()
